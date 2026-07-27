@@ -168,6 +168,53 @@ Model-driven: Claude tự quyết định tool kế tiếp dựa trên context, 
 7. stop_reason = "end_turn" → hoàn tất, báo khách hàng đã được chuyển lên cấp trên.
 ```
 
+**Cùng ví dụ trên, kể theo kiểu "câu chuyện" (dễ nhớ hơn):**
+
+Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), một "nhân viên xử lý hoàn tiền" (Subagent), và một **máy kiểm soát tự động** ở cửa (Hook) mà không ai tắt được.
+
+1. Khách nhắn: "Hoàn tiền đơn #123, $800."
+2. Quản lý **không tự xử lý** — giao việc cho nhân viên hoàn tiền, nhưng giao **rất cụ thể**: "Đơn #123, khách đã xác minh mã 456, số tiền $800" (không nói cộc lốc "đi hoàn tiền đi", vì nhân viên mới không hề biết cuộc trò chuyện trước đó — nó chỉ biết đúng những gì được ghi trong tờ giấy giao việc).
+3. Nhân viên chuẩn bị bấm "Hoàn tiền $800".
+4. Máy kiểm soát tự động ở cửa kêu "bíp", chặn lại — vì có luật cài sẵn: "hoàn tiền trên $500 phải dừng". Máy này chặn **100% các trường hợp**, không có ngoại lệ, kể cả khi bảng nội quy trên tường (giống system prompt) có ghi "cố gắng giải quyết nhanh cho khách". Bảng nội quy có thể bị đọc lướt/quên; **cái máy thì không bao giờ quên**.
+5. Nhân viên không tự quyết được nữa → báo lại cho quản lý: "Vượt hạn mức, cần chuyển cấp trên."
+6. Quản lý viết một **tờ trình rõ ràng** (đơn nào, khách nào, số tiền, lý do bị chặn) — không chỉ nói miệng — để người xử lý tiếp theo không phải hỏi lại từ đầu.
+7. Quản lý báo khách: "Yêu cầu đã được ghi nhận, chuyển cấp trên phê duyệt."
+
+| Trong câu chuyện | Thuật ngữ kỹ thuật |
+|---|---|
+| Quản lý ca | Coordinator |
+| Giao việc kèm đầy đủ chi tiết | Task với context tường minh |
+| Nhân viên hoàn tiền | Subagent (`refund_specialist`) |
+| Máy kiểm soát tự động ở cửa | `PreToolUse` hook |
+| Máy chặn 100%, không ngoại lệ | Deterministic (đảm bảo tuyệt đối) |
+| Bảng nội quy trên tường | Chỉ dẫn trong system prompt (chỉ xác suất) |
+| Nhân viên báo lại cho quản lý | Escalation (subagent → coordinator) |
+| Tờ trình rõ ràng | Structured handoff |
+| "Đã ghi nhận, chuyển cấp trên" | `stop_reason: "end_turn"` |
+
+> 🎯 **Bài học cốt lõi cho đề thi**: câu hỏi kiểu "làm sao đảm bảo *chắc chắn 100%*" một quy tắc tiền bạc/an toàn → đáp án luôn là **hook**, không bao giờ là "viết thêm vào prompt" (vì prompt chỉ mang tính xác suất).
+
+### Chương 8 & Session/Resume/Fork — giải thích dễ hiểu (ẩn dụ)
+
+**8.1 Pipeline cố định** = giống một **công thức nấu ăn quen thuộc**: sơ chế → ướp → xào → nêm nếm → trình bày, lần nào cũng đúng thứ tự đó. Dùng khi công việc **lặp lại theo cùng khuôn mẫu**, cần ổn định/dễ tái lập hơn là linh hoạt.
+
+**8.2 Phân rã thích ứng động** = giống một **thám tử điều tra vụ án**: không thể lên kế hoạch "bước 1, 2, 3" trước khi biết vụ án là gì — phải tìm manh mối đầu tiên, dựa vào đó quyết định điều tra tiếp ở đâu, phát hiện thêm thì lại điều chỉnh hướng đi. Dùng khi **không biết trước phạm vi**, mỗi bước phụ thuộc kết quả bước trước.
+
+**8.3 Multi-pass review** = giống **chấm thi tránh gian lận**: nếu đọc liên tục 14 bài trong 1 lượt, bài đầu được chấm kỹ còn bài cuối bị đọc lướt (không nhất quán), và muốn phát hiện 2 bài copy nhau thì phải nhớ chi tiết cả 14 bài cùng lúc (gần như bất khả thi). Cách đúng: chấm **từng bài riêng trước** (lượt 1), rồi làm **một lượt riêng chỉ để so sánh chéo** (lượt 2) — áp dụng cho review PR 10+ file: lượt 1 từng file riêng, lượt 2 phân tích quan hệ chéo file (lỗi kiểu dữ liệu không khớp, phụ thuộc vòng tròn).
+
+**Session/Resume/Fork** = giống **file lưu game (savegame)**:
+- `--resume` = load lại đúng file save đang chơi dở, tiếp tục từ chỗ dừng. ⚠️ Nhưng nếu ai đó "âm thầm sửa code" trong lúc bạn vắng mặt, phải **báo cho agent biết** — nếu không nó vẫn tưởng mọi thứ y hệt lúc dừng, dẫn đến quyết định sai vì dùng thông tin lỗi thời.
+- `fork_session` = **copy file save thành 2 bản** để thử 2 hướng đi khác nhau mà không sợ hỏng bản chính — dùng khi phân vân giữa 2 phương án kiến trúc, muốn so sánh song song từ cùng một điểm xuất phát.
+- Chọn resume khi context cũ **vẫn còn đúng**; tạo session mới kèm tóm tắt có cấu trúc khi context cũ **đã lỗi thời**.
+
+| Khái niệm | Ẩn dụ dễ nhớ |
+|---|---|
+| Pipeline cố định | Công thức nấu ăn — luôn theo đúng thứ tự |
+| Phân rã thích ứng động | Thám tử điều tra — quyết định bước tiếp theo dựa vào manh mối vừa tìm |
+| Multi-pass review | Chấm thi 2 vòng — từng bài riêng, rồi so sánh chéo |
+| `--resume` | Load file save cũ — nhớ báo nếu "thế giới" đã thay đổi khi vắng mặt |
+| `fork_session` | Copy file save thành 2 nhánh — thử song song không sợ hỏng bản chính |
+
 ---
 
 ## NGÀY 3 (chưa học) — Tool Design, MCP & cấu hình Claude Code
@@ -205,4 +252,4 @@ Model-driven: Claude tự quyết định tool kế tiếp dựa trên context, 
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành Ngày 2 + đào sâu Chương 3.*
+*Cập nhật lần cuối: sau khi hoàn thành Ngày 2 + đào sâu Chương 3, Chương 8, Session/Resume/Fork (bản giải thích dễ hiểu bằng ẩn dụ).*
