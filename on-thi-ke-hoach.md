@@ -13,7 +13,7 @@
 - [x] **Ngày 4** — Prompt Engineering & Structured Output (Ch.6–7, Lĩnh vực 4 — 20%)
 - [x] **Ngày 5** — Quản lý Context & Độ tin cậy (Ch.9–12, Lĩnh vực 5 — 15%)
 - [x] **Ngày 6** — Ôn tổng hợp + 12 câu hỏi mẫu có giải thích
-- [ ] **Ngày 7** — Thi thử toàn phần (76 câu luyện tập)
+- [x] **Ngày 7** — Thi thử toàn phần (76 câu luyện tập) — kết quả 52/76 (68.4%)
 
 ---
 
@@ -416,12 +416,90 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 
 ---
 
-## NGÀY 7 (chưa học) — Thi thử toàn phần
+## NGÀY 7 — Thi thử toàn phần (76 câu) — Kết quả & Chẩn đoán
 
-- [ ] 76 câu bài luyện tập (L2120–3405), tính giờ như thi thật
-- [ ] Rà soát câu sai, quay lại đúng chương liên quan
-- [ ] Ôn nhanh 8 kịch bản, đặc biệt 3 kịch bản không có câu hỏi riêng
+Làm bài thi thử tương tác (76 câu, artifact HTML) trong điều kiện giống thi thật.
+
+### Điểm số
+
+**Tổng: 52/76 (68.4%)** — dưới ngưỡng tham chiếu 72% (≈720/1000 của đề thật).
+
+| Kịch bản | Điểm | Đánh giá |
+|---|---|---|
+| **Claude Code cho CI/CD** | 7/15 (47%) | 🔴 Yếu nhất — ưu tiên số 1 |
+| Hệ thống Nghiên cứu Đa tác nhân | 10/15 (67%) | 🟡 Cần ôn lại |
+| Customer Support Agent | 10/15 (67%) | 🟡 Cần ôn lại |
+| Sinh mã với Claude Code | 11/15 (73%) | 🟢 Khá ổn |
+| Mẫu kiến trúc AI hội thoại | 14/16 (88%) | 🟢 Tốt |
+
+Tin tốt: CI/CD (yếu nhất) và phần lớn lỗi khác rơi vào Lĩnh vực 1 (27%) và Lĩnh vực 3 (20%) — đúng 2 lĩnh vực nặng điểm nhất, nên sửa đúng các lỗi này tác động lớn nhất lên điểm thi thật.
+
+### 24 câu sai (số câu · kịch bản · đã chọn → đáp án đúng)
+
+| Câu | Kịch bản | Chọn | Đúng |
+|---|---|---|---|
+| 1 | Nghiên cứu Đa tác nhân | C | D |
+| 7 | Nghiên cứu Đa tác nhân | C | B |
+| 10 | Nghiên cứu Đa tác nhân | D | A |
+| 11 | Nghiên cứu Đa tác nhân | D | B |
+| 13 | Nghiên cứu Đa tác nhân | D | C |
+| 16 | CI/CD | C | B |
+| 17 | CI/CD | D | A |
+| 18 | CI/CD | D | B |
+| 20 | CI/CD | C | D |
+| 23 | CI/CD | C | A |
+| 25 | CI/CD | A | D |
+| 28 | CI/CD | B | A |
+| 29 | CI/CD | C | A |
+| 31 | Sinh mã | A | B |
+| 33 | Sinh mã | C | D |
+| 36 | Sinh mã | A | C |
+| 38 | Sinh mã | C | D |
+| 47 | Customer Support | A | C |
+| 48 | Customer Support | A | C |
+| 50 | Customer Support | B | C |
+| 51 | Customer Support | D | C |
+| 52 | Customer Support | D | A |
+| 68 | Mẫu hội thoại | B | C |
+| 72 | Mẫu hội thoại | B | A |
+
+### 5 nhóm lỗi lặp lại (quan trọng hơn từng câu riêng lẻ)
+
+**Nhóm 1 — Vẫn chọn "sửa bằng prompt" thay vì "cơ chế cứng"** (Câu 10, 16, 17, 51) — pattern #1 đã nhấn mạnh từ Ngày 2 nhưng vẫn sai ở đề thật.
+
+*Quy tắc tự vấn 2 bước:*
+1. Hậu quả nếu model "quên"/hiểu sai là gì? → Tiền bạc/pháp lý/an toàn/không hoàn tác được → PHẢI dùng cơ chế cứng (hook, precondition code, cờ CLI, tool validation, instance tách biệt). Chỉ là phong cách/định dạng, sửa lại được → prompt/few-shot là đủ.
+2. Cơ chế cứng cụ thể là gì? Business rule về thứ tự/ngưỡng → `PreToolUse` hook/precondition lập trình · Cần structured output đáng tin cậy → `tool_use`+schema hoặc `--output-format json`/`--json-schema` · Tool bị lạm dụng ngoài phạm vi → thay bằng tool chuyên biệt hẹp hơn + validation · Model tự review chính nó → instance độc lập khác, không phải prompt "tự phê bình".
+
+⚠️ Lưu ý chiều ngược: đừng áp dụng "hook" cho mọi thứ — nếu hậu quả chỉ là bất tiện nhỏ (giọng văn, ngôn ngữ ưu tiên...), prompt/few-shot vẫn là lựa chọn đúng, dùng hook ở đó là over-engineering.
+
+**Nhóm 2 — Nhầm khi nào dùng Few-shot** (Câu 7, 20, 47, 52) — sai theo cả 2 chiều (dùng thiếu lẫn dùng thừa).
+
+*Quy tắc tự vấn 3 bước:*
+1. Agent chọn sai tool/entity vì tên/mô tả chồng lấn? → CÓ → sửa mô tả/tên tool trước, KHÔNG few-shot (Câu 7).
+2. Nếu mô tả đã ổn: agent đã tốt với ca đơn giản, chỉ lúng túng ở MỘT mẫu hành vi lặp lại, minh họa được bằng vài ví dụ? → CÓ → few-shot đúng là đáp án, đừng xây thêm hạ tầng — routing layer/preprocessing/two-pass đều thừa (Câu 20, 47).
+3. Nếu khoảng trống/lỗi thay đổi ngẫu nhiên theo từng case, không liệt kê trước được → cần cơ chế ĐỘNG (giai đoạn tự phê bình/self-critique), không phải few-shot cố định (Câu 52).
+
+**Nhóm 3 — Nhầm `.claude/rules/` (theo path/glob) với Skill (gọi theo nhu cầu)** (Câu 33, 38 — sai giống hệt nhau 2 lần).
+
+*Câu hỏi tự vấn:* "Quy ước này áp dụng vì tôi đang chạm vào MỘT LOẠI FILE, hay vì tôi đang làm MỘT TÁC VỤ cụ thể?"
+- `.claude/rules/` + `paths`: tự động nạp mỗi khi mở/sửa file khớp glob, bất kể đang làm gì (VD: mọi `*.test.tsx`).
+- Skill: chỉ nạp khi được gọi theo nhu cầu (slash command), gắn với một quy trình cụ thể (sinh endpoint mới, review PR, migration) — mở file trong đúng thư mục đó để làm việc khác thì không cần.
+
+*Ví dụ:* sửa `orders.test.ts` → rule test tự nạp. Gõ `/new-endpoint` → skill nạp ví dụ mẫu endpoint. Debug bug cũ trong `orders.ts` → không cái nào nạp cả.
+
+**Nhóm 4 — Escalation: "bằng chứng mâu thuẫn lời khách" vs "chính sách im lặng"** (Câu 50).
+
+*Quy tắc:* Chính sách CÓ đề cập (dù không có lợi cho khách) + có bằng chứng rõ ràng → agent tự tin trình bày bằng chứng/quy định, KHÔNG escalate (VD: khách nói chưa nhận hàng nhưng tracking + chữ ký đã có). Chính sách THỰC SỰ im lặng, không quy định gì → escalate vì agent không có thẩm quyền tự đặt luật mới (VD: so giá đối thủ, chính sách chỉ nói về giảm giá trên chính site mình).
+
+**Nhóm 5 — 2 kỹ thuật ngoài phạm vi 13 chương lý thuyết** (Câu 68, 72) — chỉ cần nhớ trực tiếp, không cần suy luận:
+- Hội thoại dài hàng tháng, cần tra lại một kết luận cụ thể cũ → **semantic search/embedding** để truy xuất đúng đoạn liên quan (tóm tắt lũy tiến sẽ làm mất chi tiết vì nén thành khái niệm chung chung).
+- Muốn loại bỏ lời chào lặp lại ("Certainly!"...) → **prefill sẵn phần đầu tin nhắn assistant**, không phải dặn prompt hay hạ temperature (không kiểm soát được cụm từ cố định một cách đáng tin cậy).
+
+### Kế hoạch ôn lại trước khi thi thật
+
+→ Đã tách sang file riêng: **[`ke-hoach-on-lai-truoc-khi-thi.md`](./ke-hoach-on-lai-truoc-khi-thi.md)**
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành Ngày 3, 4, 5, 6 (kèm bản giải thích dễ hiểu bằng ẩn dụ) và 12 câu hỏi mẫu chính thức. Còn lại: Ngày 7 — thi thử toàn phần 76 câu.*
+*Cập nhật lần cuối: sau khi hoàn thành Ngày 7 — thi thử 76 câu (52/76, 68.4%), chẩn đoán 5 nhóm lỗi lặp lại, và lập kế hoạch ôn lại trước khi thi thật.*
