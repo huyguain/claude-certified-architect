@@ -1,7 +1,7 @@
 # Kế hoạch & Nhật ký ôn thi — Claude Certified Architect (7 ngày)
 
 > File này lưu lại toàn bộ lộ trình + nội dung đã ôn, để tiếp tục học ở bất kỳ máy nào (nhà, công ty...).
-> Nguồn gốc: `guide_vi.md` (3405 dòng) trong repo này.
+> Nguồn gốc: `../guide_vi.md` (3405 dòng) ở thư mục gốc repo.
 
 ---
 
@@ -498,7 +498,7 @@ Tin tốt: CI/CD (yếu nhất) và phần lớn lỗi khác rơi vào Lĩnh v�
 
 ### Kế hoạch ôn lại trước khi thi thật
 
-→ Đã tách sang file riêng: **[`ke-hoach-on-lai-truoc-khi-thi.md`](./ke-hoach-on-lai-truoc-khi-thi.md)**
+→ Đã tách sang file riêng: **[`03-chan-doan-thi-thu.md`](./03-chan-doan-thi-thu.md)**
 
 ---
 

@@ -1,6 +1,6 @@
 # Tổng hợp ôn thi — Claude Certified Architect
 
-> Trang tra cứu tổng hợp toàn bộ 7 ngày ôn tập, kèm chẩn đoán từ bài thi thử 76 câu. Bản artifact trực quan: xem `on-thi-ke-hoach.md` và `ke-hoach-on-lai-truoc-khi-thi.md` để có đầy đủ chi tiết/ví dụ/ẩn dụ; file này là bản cô đọng để tra cứu nhanh.
+> Trang tra cứu tổng hợp toàn bộ 7 ngày ôn tập, kèm chẩn đoán từ bài thi thử 76 câu. Xem [`01-nhat-ky-on-tap.md`](./01-nhat-ky-on-tap.md) và [`03-chan-doan-thi-thu.md`](./03-chan-doan-thi-thu.md) để có đầy đủ chi tiết/ví dụ/ẩn dụ; file này là bản cô đọng để tra cứu nhanh.
 
 ---
 
@@ -157,6 +157,6 @@ Hội thoại dài hàng tháng, tra lại kết luận cụ thể → **semanti
 
 ---
 
-*Nguồn: `guide_vi.md` · `on-thi-ke-hoach.md` · `ke-hoach-on-lai-truoc-khi-thi.md` — bản artifact trực quan: https://claude.ai/code/artifact/936b4b5e-5444-4745-aaa3-75247365db31*
+*Nguồn: `../guide_vi.md` · `01-nhat-ky-on-tap.md` · `03-chan-doan-thi-thu.md` — bản artifact trực quan: https://claude.ai/code/artifact/936b4b5e-5444-4745-aaa3-75247365db31*
 
 *Kết quả bài thi thử kèm giải thích từng câu: https://claude.ai/code/artifact/5c357286-5fa6-46c9-b2c0-7dec3c636bdd*
