@@ -2,6 +2,9 @@
 
 > Rút ra từ kết quả thi thử 76 câu (bài luyện tập trong `on-thi-ke-hoach.md`, mục Ngày 7).
 
+📝 **Xem lại toàn bộ bài làm kèm giải thích từng câu**: https://claude.ai/code/artifact/5c357286-5fa6-46c9-b2c0-7dec3c636bdd (76 câu, tô màu đúng/sai, lọc theo "chỉ câu sai" — lưu vĩnh viễn, không phụ thuộc trình duyệt/thiết bị).
+> Làm lại bài thi thử mới (trắng, chưa tô sẵn): https://claude.ai/code/artifact/921cfadd-9e3c-4c91-aec7-42fef0ffc5eb
+
 ## Điểm số
 
 **Tổng: 52/76 (68.4%)** — dưới ngưỡng tham chiếu 72% (≈720/1000 của đề thật).

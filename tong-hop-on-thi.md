@@ -158,3 +158,5 @@ Hội thoại dài hàng tháng, tra lại kết luận cụ thể → **semanti
 ---
 
 *Nguồn: `guide_vi.md` · `on-thi-ke-hoach.md` · `ke-hoach-on-lai-truoc-khi-thi.md` — bản artifact trực quan: https://claude.ai/code/artifact/936b4b5e-5444-4745-aaa3-75247365db31*
+
+*Kết quả bài thi thử kèm giải thích từng câu: https://claude.ai/code/artifact/5c357286-5fa6-46c9-b2c0-7dec3c636bdd*
