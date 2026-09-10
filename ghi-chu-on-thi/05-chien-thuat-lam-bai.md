@@ -74,3 +74,20 @@ Trong bài thi thử, các câu sai dồn vào đáp án **C/D dài, nhiều cơ
 - **Đọc tình huống trước, quên mất bị hỏi gì** — luôn Bước 1 trước.
 - **Neo vào đáp án đầu tiên nghe hợp lý** — bắt buộc đọc hết 4 đáp án rồi mới loại.
 - **Đem giả định ngoài đề** — chỉ dùng thông tin trong tình huống; đừng tự thêm "chắc là hệ thống còn có X".
+
+## Ví dụ áp dụng đầy đủ — Câu 10 (đã sai: chọn D, đúng là A)
+
+> **Tình huống:** Agent phân tích tài liệu được cấp tool đa năng `fetch_url` để tải tài liệu theo URL. Log cho thấy agent lại dùng nó để tải trang kết quả tìm kiếm — việc lẽ ra thuộc về agent web-search — gây kết quả không nhất quán. **Which fix is most effective?**
+> A) Thay `fetch_url` bằng `load_document` — xác thực URL phải trỏ đến định dạng tài liệu. **[ĐÚNG]**
+> B) Bỏ hẳn `fetch_url` khỏi agent này, định tuyến mọi việc tải URL qua coordinator → web-search.
+> C) Lọc chặn `fetch_url` với các domain công cụ tìm kiếm đã biết.
+> D) Thêm hướng dẫn vào prompt: `fetch_url` chỉ để tải tài liệu, không phải để search. *(đã chọn — sai)*
+
+1. **Loại câu hỏi:** "Which **fix** is most effective?" → cần nhắm đúng nguyên nhân gốc.
+2. **Gạch chân:** hành vi sai đã xảy ra thật, lặp lại có hệ thống (không ngẫu nhiên, không phải giọng văn) → cơ chế cứng. Từ khóa then chốt: tool **"đa năng"** = nguyên nhân gốc. Cái cần giữ: agent vẫn phải tải được tài liệu theo URL.
+3. **Gắn lĩnh vực:** LV2 (Tool design) — nguyên tắc *least privilege*, không phải LV4 (prompt engineering).
+4. **Loại rõ:** D = "sửa bằng prompt" cho lỗi *tool bị lạm dụng ngoài phạm vi* — đúng bẫy Nhóm 1 (xem `03-chan-doan-thi-thu.md`), tool vẫn đa năng nên không gì ngăn tái diễn. C = vá triệu chứng (danh sách domain né được bằng domain mới/redirect), tool vẫn đa năng.
+5. **A vs B (đều là cơ chế cứng):** B xóa hẳn khả năng tải tài liệu của agent — quá tay, phá luôn nhu cầu hợp lệ. A thu hẹp đúng phạm vi (validate ở tầng interface) mà vẫn giữ chức năng cần — least privilege, ít thiệt hại phụ nhất.
+6. **Chặn thiên lệch:** B trông "chặt chẽ, an toàn hơn" vì cắt hẳn quyền — đúng bẫy "chọn đáp án nghe kỹ lưỡng hơn" thay vì đáp án tối giản đúng nguyên nhân gốc.
+
+→ **A**.
