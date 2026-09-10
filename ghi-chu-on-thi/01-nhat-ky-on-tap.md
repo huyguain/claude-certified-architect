@@ -420,6 +420,11 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 
 Làm bài thi thử tương tác (76 câu, artifact HTML) trong điều kiện giống thi thật.
 
+- Bản tiếng Việt (đã tô đúng/sai + giải thích): https://claude.ai/code/artifact/5c357286-5fa6-46c9-b2c0-7dec3c636bdd
+- Bản trắng làm lại: https://claude.ai/code/artifact/921cfadd-9e3c-4c91-aec7-42fef0ffc5eb
+- Bản tiếng Anh (gốc, từ phần "Practice Test" của `../guide_en.md`): https://claude.ai/code/artifact/6b78c074-650f-4237-8e19-b3a9971173b3 — file cục bộ: [`../practical_test_en_76.html`](../practical_test_en_76.html)
+- Bản tiếng Anh — xem lại bài làm đã chấm (52/76, đáp án đã chọn + giải thích, lọc "chỉ câu sai"): https://claude.ai/code/artifact/e428cc2d-bfbb-4dc0-8e68-6ba3ff32e230 — file cục bộ: [`../practical_test_en_76_review.html`](../practical_test_en_76_review.html)
+
 ### Điểm số
 
 **Tổng: 52/76 (68.4%)** — dưới ngưỡng tham chiếu 72% (≈720/1000 của đề thật).

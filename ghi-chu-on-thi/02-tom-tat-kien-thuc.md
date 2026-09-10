@@ -160,3 +160,7 @@ Hội thoại dài hàng tháng, tra lại kết luận cụ thể → **semanti
 *Nguồn: `../guide_vi.md` · `01-nhat-ky-on-tap.md` · `03-chan-doan-thi-thu.md` — bản artifact trực quan: https://claude.ai/code/artifact/936b4b5e-5444-4745-aaa3-75247365db31*
 
 *Kết quả bài thi thử kèm giải thích từng câu: https://claude.ai/code/artifact/5c357286-5fa6-46c9-b2c0-7dec3c636bdd*
+
+*Bản tiếng Anh (gốc) của 76 câu thi thử — làm trực tiếp: https://claude.ai/code/artifact/6b78c074-650f-4237-8e19-b3a9971173b3*
+
+*Bản tiếng Anh — xem lại bài làm đã chấm (52/76), giải thích từng câu, lọc "chỉ câu sai": https://claude.ai/code/artifact/e428cc2d-bfbb-4dc0-8e68-6ba3ff32e230*

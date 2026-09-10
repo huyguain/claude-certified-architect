@@ -4,6 +4,8 @@
 
 📝 **Xem lại toàn bộ bài làm kèm giải thích từng câu**: https://claude.ai/code/artifact/5c357286-5fa6-46c9-b2c0-7dec3c636bdd (76 câu, tô màu đúng/sai, lọc theo "chỉ câu sai" — lưu vĩnh viễn, không phụ thuộc trình duyệt/thiết bị).
 > Làm lại bài thi thử mới (trắng, chưa tô sẵn): https://claude.ai/code/artifact/921cfadd-9e3c-4c91-aec7-42fef0ffc5eb
+> Bản tiếng Anh (gốc) của 76 câu — làm trực tiếp, hiện giải thích sau mỗi câu: https://claude.ai/code/artifact/6b78c074-650f-4237-8e19-b3a9971173b3 (nguồn: phần "Practice Test" trong `../guide_en.md`; file cục bộ `../practical_test_en_76.html`)
+> Bản tiếng Anh — xem lại bài làm đã chấm (đáp án đã chọn vs. đáp án đúng, breakdown theo kịch bản, lọc "chỉ câu sai"): https://claude.ai/code/artifact/e428cc2d-bfbb-4dc0-8e68-6ba3ff32e230 (file cục bộ `../practical_test_en_76_review.html`)
 
 ## Điểm số
 
