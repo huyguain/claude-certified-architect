@@ -1,7 +1,7 @@
 # Kế hoạch & Nhật ký ôn thi — Claude Certified Architect (7 ngày)
 
 > File này lưu lại toàn bộ lộ trình + nội dung đã ôn, để tiếp tục học ở bất kỳ máy nào (nhà, công ty...).
-> Nguồn gốc: `guide_vi.md` (3405 dòng) trong repo này.
+> Nguồn gốc: `../guide_vi.md` (3405 dòng) ở thư mục gốc repo.
 
 ---
 
@@ -9,11 +9,11 @@
 
 - [x] **Ngày 1** — Nền tảng Claude API & Tool Use (Ch.1–2)
 - [x] **Ngày 2** — Kiến trúc & Điều phối Agent (Ch.3, Ch.8, Lĩnh vực 1 — 27%)
-- [ ] **Ngày 3** — Tool Design, MCP & cấu hình Claude Code (Ch.4, 5, 13, Lĩnh vực 2 — 18% & 3 — 20%)
+- [x] **Ngày 3** — Tool Design, MCP & cấu hình Claude Code (Ch.4, 5, 13, Lĩnh vực 2 — 18% & 3 — 20%)
 - [x] **Ngày 4** — Prompt Engineering & Structured Output (Ch.6–7, Lĩnh vực 4 — 20%)
-- [ ] **Ngày 5** — Quản lý Context & Độ tin cậy (Ch.9–12, Lĩnh vực 5 — 15%)
-- [ ] **Ngày 6** — Ôn tổng hợp + 12 câu hỏi mẫu có giải thích
-- [ ] **Ngày 7** — Thi thử toàn phần (76 câu luyện tập)
+- [x] **Ngày 5** — Quản lý Context & Độ tin cậy (Ch.9–12, Lĩnh vực 5 — 15%)
+- [x] **Ngày 6** — Ôn tổng hợp + 12 câu hỏi mẫu có giải thích
+- [x] **Ngày 7** — Thi thử toàn phần (76 câu luyện tập) — kết quả 52/76 (68.4%)
 
 ---
 
@@ -217,12 +217,67 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 
 ---
 
-## NGÀY 3 (chưa học) — Tool Design, MCP & cấu hình Claude Code
+## NGÀY 3 — Tool Design, MCP & Cấu hình Claude Code (Lĩnh vực 2 — 18% & 3 — 20%)
 
-- [ ] Chương 4 — MCP server, cấu hình, cờ `isError`, MCP Resources (`guide_vi.md` L446–546)
-- [ ] Chương 13 — Lựa chọn tool dựng sẵn, điều tra tăng dần, Read+Write thay Edit (L1477–1510)
-- [ ] Chương 5 — Phân cấp CLAUDE.md, `@path`, `.claude/rules/`, slash command & skill, planning mode, `/compact`, `/memory`, CI/CD, `fork_session` (L547–801)
-- [ ] Phần II — Lĩnh vực 2 (L1607–1677) và Lĩnh vực 3 (L1678–1763)
+### Chương 4 — MCP
+
+- 3 loại tài nguyên: **Tools** (hành động), **Resources** (dữ liệu để đọc, không cần hành động), **Prompts** (mẫu định sẵn).
+- Kết nối MCP server → tool được khám phá tự động, tool từ **mọi server đã kết nối dùng được đồng thời**.
+- `.mcp.json` (dự án, qua VCS, secret bằng biến môi trường `${GITHUB_TOKEN}`) vs `~/.claude.json` (người dùng, không chia sẻ, thử nghiệm cá nhân).
+- Ưu tiên MCP server cộng đồng có sẵn (Jira/GitHub/Slack); chỉ tự xây cho workflow đặc thù riêng.
+- ⚠️ **Cờ `isError`**: lỗi có cấu trúc (`errorCategory`, `isRetryable`, `message`) giúp agent quyết định đúng; lỗi chung chung (`"Operation failed"`) không cho biết nên retry/đổi truy vấn/escalate.
+- **MCP Resources**: agent không cần tool "thăm dò" để hiểu dữ liệu gì tồn tại — resource cho sẵn "tấm bản đồ".
+
+### Chương 13 — Tool dựng sẵn
+
+| Tác vụ | Tool |
+|---|---|
+| Tìm file theo tên/mẫu | Glob |
+| Tìm nội dung trong file | Grep |
+| Đọc toàn bộ file | Read |
+| Ghi file mới | Write |
+| Sửa chính xác 1 đoạn | Edit |
+| Chạy lệnh shell | Bash |
+
+- Điều tra tăng dần: Grep tìm entry point → Read → Grep tìm nơi dùng → Read tiếp → lặp lại, không đọc hết mọi file cùng lúc.
+- Khi Edit thất bại (khớp không duy nhất) → fallback Read (nạp toàn bộ) → sửa bằng chương trình → Write (ghi lại).
+
+### Chương 5 — Claude Code: Cấu hình & Workflow
+
+- **3 cấp CLAUDE.md**: người dùng (`~/.claude/CLAUDE.md`, không qua VCS) / dự án (`.claude/CLAUDE.md` hoặc root, qua VCS, cho cả nhóm) / thư mục (quy ước riêng phần đó). ⚠️ Bẫy kinh điển: chỉ dẫn dự án bị đặt nhầm ở mức người dùng → thành viên mới không nhận được.
+- `@path`: import file khác để mô-đun hóa, không cách sau `@`, độ sâu lồng tối đa **5**.
+- `.claude/rules/` + YAML frontmatter `paths`: chỉ nạp quy tắc khi sửa file khớp glob → tiết kiệm context; dùng khi quy ước trải rộng nhiều thư mục (test, migration), khác CLAUDE.md cấp thư mục (gắn với 1 thư mục cụ thể).
+- Slash command/Skill: `.claude/commands/` (cũ) đã hợp nhất `.claude/skills/` (hiện tại, `SKILL.md` + frontmatter). `context: fork` = chạy trong subagent tách biệt; `allowed-tools` = giới hạn tool; `argument-hint` = gợi ý tham số.
+- **Planning mode** (thay đổi lớn, nhiều phương án, codebase lạ, migration 45+ file) vs **thực thi trực tiếp** (sửa lỗi 1 file rõ ràng). Kết hợp: planning điều tra/thiết kế → duyệt → thực thi. Subagent **Explore** tách output khám phá dài khỏi context chính.
+- `/compact`: nén context, rủi ro mất số liệu chính xác. `/memory`: mở CLAUDE.md để ghi nhớ qua session.
+- CI/CD: `-p`/`--print` bắt buộc cho non-interactive; `--output-format json` + `--json-schema` cho structured output. ⚠️ **Cô lập context session**: session vừa sinh code thì kém khách quan khi tự review chính nó → dùng instance độc lập.
+
+### Trắc nghiệm Ngày 3 (đã làm)
+
+1. Lỗi MCP chung chung "Operation failed" → agent không đủ thông tin quyết định retry/escalate.
+2. Secret trong `.mcp.json` dùng chung → biến môi trường `${GITHUB_TOKEN}`, không commit token thật.
+3. Thành viên mới không theo chuẩn code dự án → chỉ dẫn bị đặt nhầm ở mức người dùng thay vì mức dự án.
+4. Quy ước chỉ áp dụng cho `src/api/**` → `.claude/rules/` với `paths` để tiết kiệm context.
+5. Pipeline CI treo chờ input → dùng `-p` + `--output-format json --json-schema`.
+6. Tự review code mình vừa viết → kém khách quan, nên dùng instance độc lập.
+
+### Giải thích dễ hiểu — ẩn dụ Ngày 3
+
+- **MCP** = chuẩn ổ cắm USB-C chung cho mọi hệ thống ngoài — cắm vào là dùng được ngay, không cần "hàn dây" riêng.
+- **`.mcp.json` vs `~/.claude.json`** = hộp đồ nghề để ở văn phòng (chung cả team, không chứa mật khẩu thật) vs hộp đồ nghề để ở nhà (riêng tư, thử nghiệm).
+- **`isError` có cấu trúc vs chung chung** = kết quả khám bệnh chi tiết ("cảm cúm nhẹ, nghỉ ngơi 3 ngày") vs chỉ nói "bạn bị bệnh" (vô dụng để quyết định hành động).
+- **MCP Resource** = tấm bản đồ thành phố, thay vì phải hỏi đường từng người (tool thăm dò).
+- **6 tool dựng sẵn** = bộ đồ nghề thám tử: danh bạ (Glob), kính lúp (Grep), sổ đọc (Read), giấy viết (Write), bút xóa (Edit), bộ đàm (Bash).
+- **3 cấp CLAUDE.md** = sổ tay cá nhân / nội quy công ty (chung cả nhóm) / sổ tay riêng từng phòng ban.
+- **`@path`** = trích dẫn tài liệu gốc thay vì chép lại — một nguồn sự thật duy nhất.
+- **`.claude/rules/` + `paths`** = tờ hướng dẫn chỉ phát đúng lúc cần theo loại việc, không phát tràn lan cho mọi người.
+- **Skill + `context: fork`** = thẻ công thức nấu ăn có sẵn + bếp phụ riêng để không làm bẩn bếp chính.
+- **Planning mode vs thực thi trực tiếp** = kiến trúc sư vẽ bản vẽ chờ duyệt vs thợ sửa ống nước làm ngay việc đã rõ.
+- **`/compact`** = tóm tắt biên bản họp dài — dễ mất số liệu chi tiết. **`/memory`** = sổ tay để bàn, còn nguyên qua các ca làm việc.
+- **`-p` trong CI** = thanh tra viên viết báo cáo rồi rời đi, không đứng chờ trả lời.
+- **Cô lập session khi review** = nguyên tắc "không tự chấm bài của chính mình".
+
+---
 
 ## NGÀY 4 — Prompt Engineering & Structured Output (Lĩnh vực 4 — 20%)
 
@@ -265,6 +320,11 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 - **`custom_id`**: liên kết kết quả↔tài liệu gốc; khi lỗi **chỉ gửi lại tài liệu lỗi**. (VD: 100 gửi→5 fail→xác định bằng custom_id→chia nhỏ→gửi lại đúng 5.)
 - **SLA** (bài tính giờ): cần trong 30h, batch tối đa 24h → cửa sổ gửi = 30−24 = **6h**; gửi thường xuyên → chia cửa sổ 4h. ⚠️ Nếu hạn < 24h (VD 20h) → ra số âm → **bất khả thi**, phải dùng synchronous.
 
+### Review đa instance & đa lượt (mục 4.6)
+
+- Model **tự review code mình viết** → khó tự thách thức quyết định của chính mình; **instance độc lập** tìm lỗi tinh vi tốt hơn.
+- **Review đa lượt**: từng file riêng + 1 lượt tích hợp; dùng **độ tự tin tự đánh giá** để định tuyến case cần người kiểm tra thêm.
+
 ### Tự kiểm tra Ngày 4 (đã làm)
 
 1. Đảm bảo JSON không sai cú pháp → **`tool_use` + JSON Schema** (nhiều schema thì `tool_choice:"any"`).
@@ -275,6 +335,7 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 6. Batch 200, 12 fail → xác định bằng **`custom_id`**, gửi lại đúng 12.
 7. Retry vô ích khi **thông tin không có trong nguồn**.
 8. Cần trong 20h nhưng batch tối đa 24h → **KHÔNG kịp** (20−24<0) → dùng synchronous. (Bẫy tính giờ.)
+9. Tự review code mình vừa viết → **kém khách quan**, nên dùng **instance độc lập**.
 
 ### Chương 6–7 — giải thích dễ hiểu (ẩn dụ)
 
@@ -289,27 +350,182 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 | Batch API | **Giặt gửi tiệm lấy hôm sau** (rẻ 50%, chậm ≤24h) vs **giặt nhanh lấy liền** (synchronous) |
 | `custom_id` | **Thẻ tên trên từng món đồ** — hỏng món nào mang lại đúng món đó |
 | SLA batch | Toán **gửi bưu điện kịp deadline** — hạn − thời gian xử lý = cửa sổ gửi; số âm là bất khả thi |
-
-## NGÀY 5 (chưa học) — Quản lý Context & Độ tin cậy
-
-- [ ] Chương 9 — Escalation, mẫu escalation, structured handoff, hiệu chỉnh độ tin cậy (L1129–1229)
-- [ ] Chương 10 — Nhóm lỗi, anti-pattern, lỗi subagent có cấu trúc, chú thích độ bao phủ (L1230–1291)
-- [ ] Chương 11 — Trích xuất sự kiện, cắt gọn tool result, scratchpad, ủy quyền subagent (L1292–1410)
-- [ ] Chương 12 — Bảo toàn provenance, xử lý dữ liệu xung đột (L1411–1476)
-- [ ] Phần II — Lĩnh vực 5 (L1849–1937)
-
-## NGÀY 6 (chưa học) — Ôn tổng hợp
-
-- [ ] 12 câu hỏi mẫu có giải thích (L1938–2119)
-- [ ] Đọc "Các chủ đề ngoài phạm vi" cuối tài liệu
-- [ ] Rà lại checklist "Kiến thức/Kỹ năng trọng tâm" của 5 lĩnh vực
-
-## NGÀY 7 (chưa học) — Thi thử toàn phần
-
-- [ ] 76 câu bài luyện tập (L2120–3405), tính giờ như thi thật
-- [ ] Rà soát câu sai, quay lại đúng chương liên quan
-- [ ] Ôn nhanh 8 kịch bản, đặc biệt 3 kịch bản không có câu hỏi riêng
+| Review đa instance | **Không tự chấm bài của chính mình** — nhờ người khác chấm |
+| Review đa lượt | Đánh dấu bài **chưa chắc** để gửi giáo viên khác **chấm phúc tra** |
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành Ngày 4 (Chương 6–7, Lĩnh vực 4) — few-shot, tiêu chí rõ ràng, prompt chaining, phỏng vấn, validation/retry, self-correction, Batch API + SLA. Lưu ý: Ngày 3 vẫn chưa học (học vượt Ngày 4 trước).*
+## NGÀY 5 — Quản lý Context & Độ tin cậy (Lĩnh vực 5 — 15%)
+
+### Chương 9 — Escalation & Human-in-the-Loop
+
+**5 tác nhân escalation đáng tin cậy**: (1) khách yêu cầu rõ ràng gặp người thật → escalate ngay; (2) chính sách không bao quát (im lặng, không phải cấm) → escalate; (3) agent không tiến triển sau vài lần thử → escalate; (4) thao tác tài chính vượt ngưỡng → escalate, tốt nhất qua **hook**; (5) nhiều khách hàng khớp → hỏi thêm định danh, không đoán.
+
+⚠️ **3 thứ KHÔNG đáng tin cậy**: phân tích cảm xúc (tâm trạng ≠ độ phức tạp), model tự chấm điểm tự tin (có thể sai rất tự tin, hiệu chỉnh kém), bộ phân loại tự động riêng (overengineering).
+
+**4 mẫu escalation**: ngay lập tức (yêu cầu rõ ràng) / sau khi cố giải quyết (trong phạm vi agent) / **tinh tế** (ghi nhận cảm xúc → đề xuất giải pháp → chỉ escalate nếu khách NHẮC LẠI yêu cầu gặp người — không escalate ngay từ lời than phiền đầu tiên) / vì lỗ hổng chính sách.
+
+**Structured handoff**: bản tóm tắt phải **tự chứa hoàn toàn** — người vận hành không có quyền xem lại toàn bộ hội thoại, chỉ thấy đúng tờ tóm tắt (customer_id, order_id, root_cause, actions_taken, recommended_action, escalation_reason).
+
+**Hiệu chỉnh độ tin cậy**: điểm tin cậy **cấp trường** (không phải cấp toàn văn bản); tin cậy cao/ổn định → tự động, thấp/nguồn mơ hồ → người review. ⚠️ **Lấy mẫu ngẫu nhiên phân tầng**: độ chính xác tổng 97% có thể che giấu 40% lỗi ở một loại tài liệu cụ thể — phải kiểm tra riêng theo loại tài liệu/trường.
+
+### Chương 10 — Xử lý lỗi đa agent
+
+**4 nhóm lỗi**: Tạm thời (timeout, retry+backoff) / Validation (sai input, sửa rồi retry) / Nghiệp vụ (vi phạm chính sách, không retry, giải thích) / Quyền (từ chối truy cập, escalate).
+
+**4 anti-pattern**: trạng thái chung chung ("search unavailable") / ém lỗi âm thầm (rỗng = thành công) / hủy toàn bộ workflow vì 1 lỗi / retry vô hạn trong subagent.
+
+✅ Lỗi có cấu trúc: `status`, `failure_type`, `partial_results`, `alternative_approaches`, `coverage_impact` → coordinator đủ thông tin quyết định. Chú thích độ bao phủ trong báo cáo cuối ("BAO PHỦ ĐẦY ĐỦ" vs "BAO PHỦ MỘT PHẦN — lý do").
+
+### Chương 11 — Quản lý Context Production
+
+| Kỹ thuật | Giải quyết |
+|---|---|
+| Case facts block riêng | Tóm tắt lũy tiến làm mất số liệu |
+| Cắt gọn tool result (`PostToolUse`) | Tích lũy tool result thừa |
+| Đầu vào nhận biết vị trí | Lost-in-the-middle |
+| File scratchpad | Bảo toàn phát hiện qua ranh giới context/session |
+| Ủy quyền subagent | Bảo vệ context agent chính |
+
+⚠️ **Lớp context riêng biệt**: mỗi subagent có ngân sách context giới hạn; coordinator ngăn "rò rỉ context" giữa các agent. Lưu trạng thái có cấu trúc (`agent-state/*.json` + `manifest.json`) → phục hồi sau sự cố.
+
+### Chương 12 — Bảo toàn Provenance
+
+- Mất quy kết nguồn khi tóm tắt → luôn giữ `claim` + `source_url` + `source_name` + `publication_date` + `confidence`.
+- Dữ liệu xung đột → giữ cả hai giá trị kèm quy kết, đánh dấu `conflict_detected`, để coordinator đối soát — không tự ý chọn 1 giá trị.
+- Thiếu ngày tháng → khác biệt thời gian dễ bị hiểu nhầm mâu thuẫn.
+- Trình bày theo loại nội dung: tài chính→bảng, tin tức→văn xuôi, kỹ thuật→danh sách, chuỗi thời gian→theo trình tự.
+
+### Trắc nghiệm Ngày 5 (đã làm)
+
+1. Khách than phiền lần đầu (chưa đòi gặp người) → ghi nhận + đề xuất giải pháp; chỉ escalate nếu khách nhắc lại.
+2. Độ chính xác tổng 97% → vẫn cần lấy mẫu ngẫu nhiên phân tầng theo loại tài liệu/trường.
+3. Kết quả tìm kiếm rỗng → phân biệt rõ "không có kết quả" (hợp lệ) vs "tìm kiếm thất bại" (lỗi).
+4. Xung đột dữ liệu không có ngày tháng → có thể là khác biệt thời gian bị hiểu nhầm mâu thuẫn.
+5. Lỗi "search unavailable" chung chung → coordinator không đủ thông tin quyết định retry/dùng kết quả một phần.
+6. Điều tra codebase dài gây câu trả lời không ổn định → dùng scratchpad + ủy quyền subagent Explore.
+
+### Giải thích dễ hiểu — ẩn dụ Ngày 5
+
+- **Escalation** = lễ tân bệnh viện có luật rõ ràng khi nào gọi bác sĩ; escalation tinh tế = ghi nhận → đề xuất → chỉ chuyển nếu bệnh nhân khăng khăng.
+- **Structured handoff** = tờ bệnh án đầy đủ bàn giao bác sĩ mới, vì bác sĩ mới chưa từng gặp bệnh nhân.
+- **Hiệu chỉnh độ tin cậy** = máy dò kim loại sân bay, hiệu chỉnh độ nhạy bằng vật mẫu đã biết.
+- **Lấy mẫu phân tầng** = kiểm tra riêng từng dây chuyền sản xuất, không chỉ nhìn tỷ lệ đạt tổng.
+- **4 nhóm lỗi** = 4 lý do giao hàng thất bại (kẹt xe / sai địa chỉ / hàng cấm / thiếu giấy phép).
+- **Case facts block** = bảng thông tin đầu giường bệnh nhân, không đổi qua các ca trực.
+- **Cắt gọn tool result** = thư ký lọc báo cáo 40 trang còn 5 số liệu cần thiết.
+- **Scratchpad** = sổ tay điều tra của thám tử.
+- **Ủy quyền subagent** = cử thực tập sinh đọc kho tài liệu, chỉ báo lại 1 câu tóm tắt.
+- **Provenance** = nguyên tắc trích dẫn báo chí, luôn ghi rõ nguồn/ngày/độ tin cậy.
+- **Dữ liệu xung đột** = giữ cả 2 lời khai nhân chứng, để thẩm phán (coordinator) đối chiếu.
+
+---
+
+## NGÀY 6 — Ôn tổng hợp: 12 câu hỏi mẫu chính thức
+
+*(12 câu hỏi đầy đủ + đáp án nằm trong lịch sử hội thoại ngày ôn — tự làm lại nếu cần, dưới đây là các pattern rút ra.)*
+
+**5 pattern lặp lại giúp đoán đúng hướng khi gặp câu lạ:**
+
+1. "Quy tắc nghiệp vụ quan trọng/thứ tự bắt buộc" → luôn chọn **code/hook**, không bao giờ chọn "cải thiện prompt".
+2. "Chọn sai tool giữa các tool giống nhau" → luôn chọn **sửa mô tả tool** trước, không nhảy lên giải pháp phức tạp (routing layer, bộ phân loại riêng).
+3. "Model tự chấm điểm tự tin" hoặc "phân tích cảm xúc" → luôn là đáp án **SAI** khi liên quan escalation/calibration.
+4. Khi coordinator/subagent lỗi → hỏi "vấn đề ở khâu **phân công** hay khâu **thực thi**?" trước khi đổ lỗi subagent.
+5. Đáp án đúng thường là phương án **ít cực đoan nhất** — giữ nguyên phần đang ổn, chỉ sửa đúng phần lỗi (không "cấp toàn quyền", không "chuyển hết sang 1 API", không "hủy hết").
+
+**Các chủ đề KHÔNG xuất hiện trong đề thi** (để không ôn lệch): fine-tuning/huấn luyện model tùy chỉnh · xác thực API/thanh toán/tài khoản · chi tiết ngôn ngữ lập trình/framework · triển khai/hosting MCP server (hạ tầng, mạng, container) · kiến trúc nội bộ Claude/training/model weight · Constitutional AI/RLHF · embedding/vector database · Computer use · Vision · Streaming API/SSE · rate limiting/chi phí API chi tiết · OAuth/xoay API key · cấu hình riêng theo cloud · benchmark hiệu năng model · chi tiết prompt caching · thuật toán tokenization.
+
+---
+
+## NGÀY 7 — Thi thử toàn phần (76 câu) — Kết quả & Chẩn đoán
+
+Làm bài thi thử tương tác (76 câu, artifact HTML) trong điều kiện giống thi thật.
+
+- Bản tiếng Việt (đã tô đúng/sai + giải thích): https://claude.ai/code/artifact/5c357286-5fa6-46c9-b2c0-7dec3c636bdd
+- Bản trắng làm lại: https://claude.ai/code/artifact/921cfadd-9e3c-4c91-aec7-42fef0ffc5eb
+- Bản tiếng Anh (gốc, từ phần "Practice Test" của `../guide_en.md`): https://claude.ai/code/artifact/6b78c074-650f-4237-8e19-b3a9971173b3 — file cục bộ: [`../practical_test_en_76.html`](../practical_test_en_76.html)
+- Bản tiếng Anh — xem lại bài làm đã chấm (52/76, đáp án đã chọn + giải thích, lọc "chỉ câu sai"): https://claude.ai/code/artifact/e428cc2d-bfbb-4dc0-8e68-6ba3ff32e230 — file cục bộ: [`../practical_test_en_76_review.html`](../practical_test_en_76_review.html)
+
+### Điểm số
+
+**Tổng: 52/76 (68.4%)** — dưới ngưỡng tham chiếu 72% (≈720/1000 của đề thật).
+
+| Kịch bản | Điểm | Đánh giá |
+|---|---|---|
+| **Claude Code cho CI/CD** | 7/15 (47%) | 🔴 Yếu nhất — ưu tiên số 1 |
+| Hệ thống Nghiên cứu Đa tác nhân | 10/15 (67%) | 🟡 Cần ôn lại |
+| Customer Support Agent | 10/15 (67%) | 🟡 Cần ôn lại |
+| Sinh mã với Claude Code | 11/15 (73%) | 🟢 Khá ổn |
+| Mẫu kiến trúc AI hội thoại | 14/16 (88%) | 🟢 Tốt |
+
+Tin tốt: CI/CD (yếu nhất) và phần lớn lỗi khác rơi vào Lĩnh vực 1 (27%) và Lĩnh vực 3 (20%) — đúng 2 lĩnh vực nặng điểm nhất, nên sửa đúng các lỗi này tác động lớn nhất lên điểm thi thật.
+
+### 24 câu sai (số câu · kịch bản · đã chọn → đáp án đúng)
+
+| Câu | Kịch bản | Chọn | Đúng |
+|---|---|---|---|
+| 1 | Nghiên cứu Đa tác nhân | C | D |
+| 7 | Nghiên cứu Đa tác nhân | C | B |
+| 10 | Nghiên cứu Đa tác nhân | D | A |
+| 11 | Nghiên cứu Đa tác nhân | D | B |
+| 13 | Nghiên cứu Đa tác nhân | D | C |
+| 16 | CI/CD | C | B |
+| 17 | CI/CD | D | A |
+| 18 | CI/CD | D | B |
+| 20 | CI/CD | C | D |
+| 23 | CI/CD | C | A |
+| 25 | CI/CD | A | D |
+| 28 | CI/CD | B | A |
+| 29 | CI/CD | C | A |
+| 31 | Sinh mã | A | B |
+| 33 | Sinh mã | C | D |
+| 36 | Sinh mã | A | C |
+| 38 | Sinh mã | C | D |
+| 47 | Customer Support | A | C |
+| 48 | Customer Support | A | C |
+| 50 | Customer Support | B | C |
+| 51 | Customer Support | D | C |
+| 52 | Customer Support | D | A |
+| 68 | Mẫu hội thoại | B | C |
+| 72 | Mẫu hội thoại | B | A |
+
+### 5 nhóm lỗi lặp lại (quan trọng hơn từng câu riêng lẻ)
+
+**Nhóm 1 — Vẫn chọn "sửa bằng prompt" thay vì "cơ chế cứng"** (Câu 10, 16, 17, 51) — pattern #1 đã nhấn mạnh từ Ngày 2 nhưng vẫn sai ở đề thật.
+
+*Quy tắc tự vấn 2 bước:*
+1. Hậu quả nếu model "quên"/hiểu sai là gì? → Tiền bạc/pháp lý/an toàn/không hoàn tác được → PHẢI dùng cơ chế cứng (hook, precondition code, cờ CLI, tool validation, instance tách biệt). Chỉ là phong cách/định dạng, sửa lại được → prompt/few-shot là đủ.
+2. Cơ chế cứng cụ thể là gì? Business rule về thứ tự/ngưỡng → `PreToolUse` hook/precondition lập trình · Cần structured output đáng tin cậy → `tool_use`+schema hoặc `--output-format json`/`--json-schema` · Tool bị lạm dụng ngoài phạm vi → thay bằng tool chuyên biệt hẹp hơn + validation · Model tự review chính nó → instance độc lập khác, không phải prompt "tự phê bình".
+
+⚠️ Lưu ý chiều ngược: đừng áp dụng "hook" cho mọi thứ — nếu hậu quả chỉ là bất tiện nhỏ (giọng văn, ngôn ngữ ưu tiên...), prompt/few-shot vẫn là lựa chọn đúng, dùng hook ở đó là over-engineering.
+
+**Nhóm 2 — Nhầm khi nào dùng Few-shot** (Câu 7, 20, 47, 52) — sai theo cả 2 chiều (dùng thiếu lẫn dùng thừa).
+
+*Quy tắc tự vấn 3 bước:*
+1. Agent chọn sai tool/entity vì tên/mô tả chồng lấn? → CÓ → sửa mô tả/tên tool trước, KHÔNG few-shot (Câu 7).
+2. Nếu mô tả đã ổn: agent đã tốt với ca đơn giản, chỉ lúng túng ở MỘT mẫu hành vi lặp lại, minh họa được bằng vài ví dụ? → CÓ → few-shot đúng là đáp án, đừng xây thêm hạ tầng — routing layer/preprocessing/two-pass đều thừa (Câu 20, 47).
+3. Nếu khoảng trống/lỗi thay đổi ngẫu nhiên theo từng case, không liệt kê trước được → cần cơ chế ĐỘNG (giai đoạn tự phê bình/self-critique), không phải few-shot cố định (Câu 52).
+
+**Nhóm 3 — Nhầm `.claude/rules/` (theo path/glob) với Skill (gọi theo nhu cầu)** (Câu 33, 38 — sai giống hệt nhau 2 lần).
+
+*Câu hỏi tự vấn:* "Quy ước này áp dụng vì tôi đang chạm vào MỘT LOẠI FILE, hay vì tôi đang làm MỘT TÁC VỤ cụ thể?"
+- `.claude/rules/` + `paths`: tự động nạp mỗi khi mở/sửa file khớp glob, bất kể đang làm gì (VD: mọi `*.test.tsx`).
+- Skill: chỉ nạp khi được gọi theo nhu cầu (slash command), gắn với một quy trình cụ thể (sinh endpoint mới, review PR, migration) — mở file trong đúng thư mục đó để làm việc khác thì không cần.
+
+*Ví dụ:* sửa `orders.test.ts` → rule test tự nạp. Gõ `/new-endpoint` → skill nạp ví dụ mẫu endpoint. Debug bug cũ trong `orders.ts` → không cái nào nạp cả.
+
+**Nhóm 4 — Escalation: "bằng chứng mâu thuẫn lời khách" vs "chính sách im lặng"** (Câu 50).
+
+*Quy tắc:* Chính sách CÓ đề cập (dù không có lợi cho khách) + có bằng chứng rõ ràng → agent tự tin trình bày bằng chứng/quy định, KHÔNG escalate (VD: khách nói chưa nhận hàng nhưng tracking + chữ ký đã có). Chính sách THỰC SỰ im lặng, không quy định gì → escalate vì agent không có thẩm quyền tự đặt luật mới (VD: so giá đối thủ, chính sách chỉ nói về giảm giá trên chính site mình).
+
+**Nhóm 5 — 2 kỹ thuật ngoài phạm vi 13 chương lý thuyết** (Câu 68, 72) — chỉ cần nhớ trực tiếp, không cần suy luận:
+- Hội thoại dài hàng tháng, cần tra lại một kết luận cụ thể cũ → **semantic search/embedding** để truy xuất đúng đoạn liên quan (tóm tắt lũy tiến sẽ làm mất chi tiết vì nén thành khái niệm chung chung).
+- Muốn loại bỏ lời chào lặp lại ("Certainly!"...) → **prefill sẵn phần đầu tin nhắn assistant**, không phải dặn prompt hay hạ temperature (không kiểm soát được cụm từ cố định một cách đáng tin cậy).
+
+### Kế hoạch ôn lại trước khi thi thật
+
+→ Đã tách sang file riêng: **[`03-chan-doan-thi-thu.md`](./03-chan-doan-thi-thu.md)**
+
+---
+
+*Cập nhật lần cuối: sau khi hoàn thành Ngày 7 — thi thử 76 câu (52/76, 68.4%), chẩn đoán 5 nhóm lỗi lặp lại, và lập kế hoạch ôn lại trước khi thi thật.*
