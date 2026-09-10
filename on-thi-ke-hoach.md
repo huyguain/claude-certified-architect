@@ -10,7 +10,7 @@
 - [x] **Ngày 1** — Nền tảng Claude API & Tool Use (Ch.1–2)
 - [x] **Ngày 2** — Kiến trúc & Điều phối Agent (Ch.3, Ch.8, Lĩnh vực 1 — 27%)
 - [ ] **Ngày 3** — Tool Design, MCP & cấu hình Claude Code (Ch.4, 5, 13, Lĩnh vực 2 — 18% & 3 — 20%)
-- [ ] **Ngày 4** — Prompt Engineering & Structured Output (Ch.6–7, Lĩnh vực 4 — 20%)
+- [x] **Ngày 4** — Prompt Engineering & Structured Output (Ch.6–7, Lĩnh vực 4 — 20%)
 - [ ] **Ngày 5** — Quản lý Context & Độ tin cậy (Ch.9–12, Lĩnh vực 5 — 15%)
 - [ ] **Ngày 6** — Ôn tổng hợp + 12 câu hỏi mẫu có giải thích
 - [ ] **Ngày 7** — Thi thử toàn phần (76 câu luyện tập)
@@ -224,11 +224,71 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 - [ ] Chương 5 — Phân cấp CLAUDE.md, `@path`, `.claude/rules/`, slash command & skill, planning mode, `/compact`, `/memory`, CI/CD, `fork_session` (L547–801)
 - [ ] Phần II — Lĩnh vực 2 (L1607–1677) và Lĩnh vực 3 (L1678–1763)
 
-## NGÀY 4 (chưa học) — Prompt Engineering & Structured Output
+## NGÀY 4 — Prompt Engineering & Structured Output (Lĩnh vực 4 — 20%)
 
-- [ ] Chương 6 — Few-shot, tiêu chí rõ ràng, prompt chaining, mẫu "phỏng vấn", validation/retry, tự sửa lỗi (L802–1015)
-- [ ] Chương 7 — Batch API: khi nào dùng, `custom_id`, xử lý thất bại, SLA (L1016–1075)
-- [ ] Phần II — Lĩnh vực 4 (L1764–1848)
+### Chương 6 — Prompt Engineering nâng cao
+
+**6.1 Few-shot** — đưa 2–4 ví dụ input/output làm mẫu hành vi.
+- Mạnh hơn mô tả bằng chữ: ví dụ **không nhập nhằng** về format + logic; model **khái quát hóa mẫu** cho case mới (không chỉ lặp lại).
+- 5 loại ví dụ: (1) kịch bản nhập nhằng; (2) định dạng output; (3) code chấp nhận vs có vấn đề (`==` vs `===`); (4) trích xuất từ định dạng tài liệu khác nhau (inline citation vs bibliography); (5) **phép đo phi tiêu chuẩn** ("two handfuls"→~100g) ← few-shot mạnh nhất ở đây.
+- Few-shot **giảm hallucination** trong tác vụ trích xuất.
+- ⚠️ **Quy tắc chuẩn hóa (normalization) trong prompt** chống lỗi ngữ nghĩa: ngày→ISO 8601 ("yesterday"→ngày tuyệt đối); tiền→số+mã ("five bucks"→{5,USD}); % →phân số ("half"→0.5).
+
+**6.2 Tiêu chí rõ ràng vs mơ hồ** — thay "be conservative" bằng liệt kê **gắn cờ KHI NÀO** + **KHÔNG gắn cờ khi nào**. Mức nghiêm trọng kèm ví dụ code: CRITICAL(runtime)/HIGH(security)/MEDIUM(logic bug)/LOW(code quality).
+- 🎯 **False-positive cao ở 1 hạng mục → xói mòn niềm tin vào cả hạng mục đúng** → tạm vô hiệu hóa hạng mục nhiễu / siết tiêu chí bằng ví dụ.
+
+**6.3 Prompt chaining** — chuỗi bước tập trung (per-file → per-file → integration). Chống **attention dilution**. Chaining ↔ tác vụ dự đoán được/lặp lại; **dynamic decomposition** ↔ điều tra mở.
+
+**6.4 Mẫu "Phỏng vấn"** — Claude hỏi làm rõ trước khi code (TTL vs event-based? stale OK? per-user vs global?). Dùng khi: lĩnh vực lạ, hệ quả không hiển nhiên, nhiều cách tiếp cận phụ thuộc ngữ cảnh.
+
+**6.5 Validation & Retry-with-feedback** — Extract→Validate→nếu lỗi retry kèm: tài liệu gốc + bản sai + **lỗi cụ thể**.
+
+| Retry CÓ giúp | Retry KHÔNG giúp |
+|---|---|
+| Lỗi format (ngày sai), lỗi cấu trúc (trường sai vị trí), lệch số học | Thông tin **không có trong nguồn** / nằm ở tài liệu khác không cung cấp |
+
+- **Pydantic** (4 điểm): validation cấu trúc (kiểu/required/enum) · ngữ nghĩa (validator: sum khớp total) · vòng lặp validate–retry · sinh JSON Schema cho `tool_use` (single source of truth).
+
+**6.6 Self-correction** — trích xuất cả `stated_total` lẫn `calculated_total`; lệch → `conflict_detected:true`.
+
+### Chương 7 — Message Batches API
+
+| Thuộc tính | Giá trị |
+|---|---|
+| Tiết kiệm | **50%** |
+| Cửa sổ | Đến **24h**, KHÔNG cam kết SLA latency |
+| Tool nhiều lượt | **KHÔNG hỗ trợ** (1 request = 1 response) |
+| Tương quan | **`custom_id`** liên kết request↔response |
+
+- **Quy tắc vàng**: có người chờ / blocking → **Synchronous**; chạy nền/qua đêm/khối lượng lớn → **Batch**.
+  - Synchronous: PR trước merge, code review tương tác. Batch: báo cáo nợ kỹ thuật qua đêm, audit tuần, 10.000 tài liệu.
+- **`custom_id`**: liên kết kết quả↔tài liệu gốc; khi lỗi **chỉ gửi lại tài liệu lỗi**. (VD: 100 gửi→5 fail→xác định bằng custom_id→chia nhỏ→gửi lại đúng 5.)
+- **SLA** (bài tính giờ): cần trong 30h, batch tối đa 24h → cửa sổ gửi = 30−24 = **6h**; gửi thường xuyên → chia cửa sổ 4h. ⚠️ Nếu hạn < 24h (VD 20h) → ra số âm → **bất khả thi**, phải dùng synchronous.
+
+### Tự kiểm tra Ngày 4 (đã làm)
+
+1. Đảm bảo JSON không sai cú pháp → **`tool_use` + JSON Schema** (nhiều schema thì `tool_choice:"any"`).
+2. "total" không khớp tổng dòng dù schema chặt → **lỗi ngữ nghĩa** → validation + retry-with-feedback / self-correction.
+3. Trích xuất đơn vị phi tiêu chuẩn ("a pinch") → **few-shot**.
+4. Review false-positive nhiều → **tạm vô hiệu hóa hạng mục nhiễu** + siết tiêu chí bằng ví dụ.
+5. 10.000 tài liệu, sáng mai có kết quả → **Batch**.
+6. Batch 200, 12 fail → xác định bằng **`custom_id`**, gửi lại đúng 12.
+7. Retry vô ích khi **thông tin không có trong nguồn**.
+8. Cần trong 20h nhưng batch tối đa 24h → **KHÔNG kịp** (20−24<0) → dùng synchronous. (Bẫy tính giờ.)
+
+### Chương 6–7 — giải thích dễ hiểu (ẩn dụ)
+
+| Khái niệm | Ẩn dụ dễ nhớ |
+|---|---|
+| Few-shot | Dạy việc bằng **làm mẫu** (đạt/lỗi/nghi ngờ) thay vì đọc nội quy |
+| Tiêu chí rõ ràng | **Biển báo tốc độ cụ thể** ("quá 50 mới phạt"); bắt nhầm nhiều → dân mất tin cả lần bắt đúng |
+| Prompt chaining | **Dây chuyền lắp ráp** — mỗi trạm làm kỹ 1 việc, không ôm 14 việc làm ẩu |
+| Mẫu phỏng vấn | **Thợ hỏi kỹ trước khi thi công** (ổ điện chỗ nào, tải bao nhiêu) |
+| Validation + retry | **Trả bài kèm lời phê cụ thể** ("150 nhưng cộng ra 145"); đề thiếu dữ kiện thì làm lại vô ích |
+| Self-correction | **Tự dò lại phép tính** — vừa chép tổng vừa tự cộng, lệch thì báo động |
+| Batch API | **Giặt gửi tiệm lấy hôm sau** (rẻ 50%, chậm ≤24h) vs **giặt nhanh lấy liền** (synchronous) |
+| `custom_id` | **Thẻ tên trên từng món đồ** — hỏng món nào mang lại đúng món đó |
+| SLA batch | Toán **gửi bưu điện kịp deadline** — hạn − thời gian xử lý = cửa sổ gửi; số âm là bất khả thi |
 
 ## NGÀY 5 (chưa học) — Quản lý Context & Độ tin cậy
 
@@ -252,4 +312,4 @@ Một trung tâm chăm sóc khách hàng có "quản lý ca" (Coordinator), mộ
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành Ngày 2 + đào sâu Chương 3, Chương 8, Session/Resume/Fork (bản giải thích dễ hiểu bằng ẩn dụ).*
+*Cập nhật lần cuối: sau khi hoàn thành Ngày 4 (Chương 6–7, Lĩnh vực 4) — few-shot, tiêu chí rõ ràng, prompt chaining, phỏng vấn, validation/retry, self-correction, Batch API + SLA. Lưu ý: Ngày 3 vẫn chưa học (học vượt Ngày 4 trước).*
